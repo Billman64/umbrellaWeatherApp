@@ -81,6 +81,7 @@ public class getZipCode extends AppCompatActivity {
         final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/geolookup/q/" + zip + ".json";
         tv.setText(strUrl);
         Button btn = (Button) findViewById(R.id.button);
+        btn.setText(R.string.button_label);
         btn.setText("getting weather...");
 
 
@@ -121,7 +122,7 @@ public class getZipCode extends AppCompatActivity {
                     BufferedReader reader = new BufferedReader(isr); //???
                     strResult = "error: after buffered reader";
 
-                    StringBuffer json = new StringBuffer(1024);
+                    StringBuffer json = new StringBuffer(1024); // use StringBuilder instead?
                     String tmp;
 
                     while ((tmp = reader.readLine()) != null) {
@@ -180,7 +181,7 @@ public class getZipCode extends AppCompatActivity {
             }
         });    // end of thread
         t.start();
-        btn.setText("Refresh");
+        btn.setText(R.string.button_label2);
 
 
     }
