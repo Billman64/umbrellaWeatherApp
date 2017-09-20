@@ -1,4 +1,7 @@
 <resources>
-  <string name="app_name">Umbrella</string>
-  <string name="api_key">c4e4b56a4c08adfd</string>
+    <string name="app_name">Umbrella</string>
+    <string name="api_key">c4e4b56a4c08adfd</string>
+    <string name="button_label">Get Weather</string>
+    <string name="button_label2">Refresh</string>
+    <integer name = "splash_delay">2000</integer>
 </resources>
