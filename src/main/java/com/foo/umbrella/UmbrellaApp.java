@@ -2,25 +2,28 @@ package com.foo.umbrella;
 
 import android.app.Application;
 import android.content.Intent;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
 
-import com.foo.umbrella.ui.getZipCode;
+import com.foo.umbrella.ui.MainActivity;
+import com.jakewharton.threetenabp.AndroidThreeTen;
+
+// can not use findViewById and setContentView() here for some reason, so redirecting to an activity/class that can
 
 public class UmbrellaApp extends Application {
+  private ArrayAdapter<String> listAdapter;
+  public String strData;
+  String strResult = "";
 
 
-    // show a splash screen then go to activity_get_zip_code
+//  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate();
+    AndroidThreeTen.init(this);
+//    setContentView()
 
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Intent i = new Intent(this,getZipCode.class);
-        startActivity(i);
-
-
-
-    }
-
-
+      Intent i = new Intent(this, MainActivity.class);
+    startActivity(i);
+  }
 
 }
