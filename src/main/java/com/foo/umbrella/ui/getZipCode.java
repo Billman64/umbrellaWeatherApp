@@ -60,17 +60,18 @@ public class getZipCode extends AppCompatActivity {
     }
 
     public void getWeather(View view) {
-
+        Log.d("appStatus:","clicked, getWeather() running");
         //TODO: error-trap zip input
 
         final TextView tv = (TextView) findViewById(R.id.tvBanner);
-        EditText et = (EditText) findViewById(R.id.etZIP);
+        EditText et = (EditText) findViewById(R.id.etZip);
+
         ListView lv = (ListView) findViewById(R.id.lvOutput);
 
         tv.setText(et.getText());
-
+        Log.d("appStatus:","tx.setText()");
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
-
+        Log.d("appStatus:","clicked, handler created");
 //        String arr[] = new String[12];
 //        arr[0] = "asdf";
 //        listAdapter = new ArrayAdapter<String>(this,  , arr);
