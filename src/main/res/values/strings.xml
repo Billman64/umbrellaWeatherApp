@@ -1,8 +1,10 @@
 <resources>
     <string name="app_name">Umbrella</string>
     <string name="api_key">c4e4b56a4c08adfd</string>
-    <string name="button_label">Get Weather</string>
+    <string name="button_label">getting forecast...</string>
     <string name="button_label2">Refresh</string>
+    <string name="connecting">Connecting to API...</string>
+    <string name="connetion_error">Connection error</string>
     <string name="enter_zip_hint">enter zip</string>
     <integer name = "splash_delay">2000</integer>
 </resources>
