@@ -41,6 +41,14 @@ public class getZipCode extends AppCompatActivity {
 
     private ArrayAdapter<String> listAdapter;
     public String strData;
+    public String state;
+    public String city;
+    public String weather;
+    public double temp_f;
+    public String humidity; // data includes %
+    public String wind;
+    public String precipitation;
+
     String strResult = "";
 
 
@@ -60,29 +68,26 @@ public class getZipCode extends AppCompatActivity {
     }
 
     public void getWeather(View view) {
-        Log.d("appStatus:","clicked, getWeather() running");
+
         //TODO: error-trap zip input
 
         final TextView tv = (TextView) findViewById(R.id.tvBanner);
         EditText et = (EditText) findViewById(R.id.etZip);
-
         ListView lv = (ListView) findViewById(R.id.lvOutput);
-
         tv.setText(et.getText());
-        Log.d("appStatus:","tx.setText()");
+
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
-        Log.d("appStatus:","clicked, handler created");
 //        String arr[] = new String[12];
 //        arr[0] = "asdf";
 //        listAdapter = new ArrayAdapter<String>(this,  , arr);
 
         // API call (TODO: refactor into data model area of code)
         String zip = et.getText().toString();
-        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/geolookup/q/" + zip + ".json";
+//        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/geolookup/q/" + zip + ".json";
+        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/conditions/q/" + zip + ".json";
         tv.setText(strUrl);
         Button btn = (Button) findViewById(R.id.button);
         btn.setText(R.string.button_label);
-        btn.setText("getting weather...");
 
 
         Thread t = new Thread(new Runnable() {
@@ -95,7 +100,9 @@ public class getZipCode extends AppCompatActivity {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            tv.setText("Connecting to API...");
+                            tv.setText(R.string.connecting); // connecting to API
+                            btn.setEnabled(false);
+                            btn.setText("");
 //                            tv.setBackgroundColor(tv.getBackground()-10);
                         }
                     });
@@ -132,15 +139,34 @@ public class getZipCode extends AppCompatActivity {
 //                    Log.d("jsonData",json.toString() + " |tmp: " + tmp);
                     strResult = "error: after readLine loop";
 
+
                     final JSONObject data = new JSONObject(json.toString());
                     strResult = "error: after JSONObject initialization";
 
                     if (data.length() == 0) {
                         strResult = "error: zero-length data";
                     } else {
+                        // parse JSON data
+                        final JSONObject current = new JSONObject(data.getString("current_observation"));
+                        final JSONObject display_location = new JSONObject(current.getString("display_location"));
+
+                        Log.d("forecastDataSample",current.toString().substring(0,50));
                         strResult = "error after data length>0";
                         Log.d("dataSample", data.toString().substring(0, 50));
-                    }
+
+                        if (current.toString().length()>0) {
+                                city = display_location.getString("city");
+                                state = display_location.getString("state");
+                                weather = current.getString("weather");
+                                temp_f = current.getDouble("temp_f");
+                                humidity = current.getString("relative_humidity");
+                                wind = current.getString("wind_string");
+                                precipitation = current.getString("precip_1hr_in");
+
+                                Log.d("cityState",city + "," + state);
+                            } else strResult = "error: zero-length data forecast";
+                        }
+
 
                     // send JSON data back to main thread via a bundled message object
 //                    Message msgObj = handler.obtainMessage();
@@ -152,9 +178,14 @@ public class getZipCode extends AppCompatActivity {
                         @Override
                         public void run() {
                             // main thread communication
+
                             strData = data.toString();
-                            tv.setText(data.toString());
+                            tv.setText("Current conditions for: " + city + ", " + state + "\n" +
+                                   weather + " " + temp_f + " " + humidity + " "+ wind +" "+ precipitation + "\n"
+                                    + data.toString());
 //                            tv.setBackgroundColor(tv.getBackground()+10);
+                            btn.setEnabled(true);
+                            btn.setText(R.string.button_label2);
                         }
                     });
 //                    handler.removeCallbacks(); // prevent memory leak?
@@ -175,14 +206,21 @@ public class getZipCode extends AppCompatActivity {
 
                     Log.d("MyError", "Data pull not working (maybe network connection issue?)" + e.toString());
                     Log.d("MyErrorLocation", strResult);
-                }
 
+
+                    handler.post(new Runnable(){
+                        @Override
+                        public void run() {
+                            tv.setText(R.string.connetion_error);
+                            btn.setEnabled(true);
+                            btn.setText(R.string.button_label2);
+                        }
+                    });
+                }
 
             }
         });    // end of thread
         t.start();
-        btn.setText(R.string.button_label2);
-
 
     }
 }
