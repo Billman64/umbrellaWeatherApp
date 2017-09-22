@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">Umbrella</string>
     <string name="api_key">c4e4b56a4c08adfd</string>
-    <string name="button_label">getting forecast...</string>
+    <string name="button_label">Get forecast</string>
     <string name="button_label2">Refresh</string>
     <string name="connecting">Connecting to API...</string>
     <string name="connetion_error">Connection error</string>
