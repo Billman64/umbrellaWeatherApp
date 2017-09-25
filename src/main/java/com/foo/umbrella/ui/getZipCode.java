@@ -79,7 +79,7 @@ public class getZipCode extends AppCompatActivity {
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
 //        String arr[] = new String[12];
 //        arr[0] = "asdf";
-//        listAdapter = new ArrayAdapter<String>(this,  , arr);
+
 
         // API call (TODO: refactor into data model area of code)
         String zip = et.getText().toString();
@@ -180,12 +180,23 @@ public class getZipCode extends AppCompatActivity {
                             // main thread communication
 
                             strData = data.toString();
-                            tv.setText("Current conditions for: " + city + ", " + state + "\n" +
-                                   weather + " " + temp_f + " " + humidity + " "+ wind +" "+ precipitation + "\n"
-                                    + data.toString());
+                            tv.setText("forecast for: " + city + ", " + state + "\n");
+//                                   weather + " " + temp_f + " " + humidity + " "+ wind +" "+ precipitation + "\n");
+//                                    + data.toString());
 //                            tv.setBackgroundColor(tv.getBackground()+10);
                             btn.setEnabled(true);
                             btn.setText(R.string.button_label2);
+
+
+                                // populate listView
+                                String[] arr = new String[4]; Log.d("arr", "declaring array arr");
+                                arr[0] = "condition  temp. humidity winds precip."; Log.d("arr", "initializing array arr[0]");
+                                arr[1] = weather +" "+ String.valueOf(temp_f) +" "+ humidity +" "+ wind +" "+ precipitation;
+                                arr[2] = "";
+                                arr[3] = "";
+                                listAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_1, arr); Log.d("listAdapter", arr[1]);
+                                lv.setAdapter(listAdapter); Log.d("lv", "adapter set");
+
                         }
                     });
 //                    handler.removeCallbacks(); // prevent memory leak?
