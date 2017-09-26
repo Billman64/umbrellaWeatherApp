@@ -2,6 +2,7 @@ package com.foo.umbrella.ui;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
@@ -46,7 +47,7 @@ public class getZipCode extends AppCompatActivity {
     public String weather;
     public double temp_f;
     public String humidity; // data includes %
-    public String wind;
+    public double wind;
     public String precipitation;
 
     String strResult = "";
@@ -72,9 +73,11 @@ public class getZipCode extends AppCompatActivity {
         //TODO: error-trap zip input
 
         final TextView tv = (TextView) findViewById(R.id.tvBanner);
+        final TextView tvCity = (TextView) findViewById(R.id.tvCity);
         EditText et = (EditText) findViewById(R.id.etZip);
         ListView lv = (ListView) findViewById(R.id.lvOutput);
         tv.setText(et.getText());
+
 
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
 //        String arr[] = new String[12];
@@ -84,7 +87,7 @@ public class getZipCode extends AppCompatActivity {
         // API call (TODO: refactor into data model area of code)
         String zip = et.getText().toString();
 //        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/geolookup/q/" + zip + ".json";
-        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/conditions/q/" + zip + ".json";
+        final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/conditions/hourly/q/" + zip + ".json";
         tv.setText(strUrl);
         Button btn = (Button) findViewById(R.id.button);
         btn.setText(R.string.button_label);
@@ -158,9 +161,9 @@ public class getZipCode extends AppCompatActivity {
                                 city = display_location.getString("city");
                                 state = display_location.getString("state");
                                 weather = current.getString("weather");
-                                temp_f = current.getDouble("temp_f");
+                                temp_f = current.getDouble("feelslike_f");
                                 humidity = current.getString("relative_humidity");
-                                wind = current.getString("wind_string");
+                                wind = current.getDouble("wind_mph");
                                 precipitation = current.getString("precip_1hr_in");
 
                                 Log.d("cityState",city + "," + state);
@@ -180,20 +183,40 @@ public class getZipCode extends AppCompatActivity {
                             // main thread communication
 
                             strData = data.toString();
-                            tv.setText("forecast for: " + city + ", " + state + "\n");
+                            tv.setText("forecast for:");
+                            tvCity.setText(city+ ", " + state);
 //                                   weather + " " + temp_f + " " + humidity + " "+ wind +" "+ precipitation + "\n");
 //                                    + data.toString());
 //                            tv.setBackgroundColor(tv.getBackground()+10);
                             btn.setEnabled(true);
                             btn.setText(R.string.button_label2);
 
+                                // filter out insignificant data for better UX (ie: winds <2mph, humidity 0%)
+                                String currentWeather = "Current weather:   "+ weather +" "+ String.valueOf(temp_f);
+                                if(!humidity.equals("0%")) currentWeather = currentWeather +"\n\t"+ humidity +" humid.\t";
+                                if(wind > 2) currentWeather = currentWeather +" "+ wind +" mph winds\t";
+                                if(Double.parseDouble(precipitation) >= 1.0 ) currentWeather = currentWeather +" "+ precipitation +" precip.";
 
-                                // populate listView
-                                String[] arr = new String[4]; Log.d("arr", "declaring array arr");
-                                arr[0] = "condition  temp. humidity winds precip."; Log.d("arr", "initializing array arr[0]");
-                                arr[1] = weather +" "+ String.valueOf(temp_f) +" "+ humidity +" "+ wind +" "+ precipitation;
+                                // display data - populating listView
+
+                                TextView tvCurrent = (TextView) findViewById(R.id.tvCurrentConditions);
+                                tvCurrent.setText(currentWeather);
+
+                                // Color-code by temperature
+                                if(temp_f>=60) tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.weather_warm));
+                                    else tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.weather_cool));
+
+                                String[] arr = new String[10];
+                                arr[0] = "condition  temp.";
+                                arr[1] = currentWeather;
                                 arr[2] = "";
                                 arr[3] = "";
+                                arr[4] = "";
+                                arr[5] = "";
+                                arr[6] = "";
+                                arr[7] = "";
+                                arr[8] = "";
+                                arr[9] = "";
                                 listAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_1, arr); Log.d("listAdapter", arr[1]);
                                 lv.setAdapter(listAdapter); Log.d("lv", "adapter set");
 
