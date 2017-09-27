@@ -1,5 +1,8 @@
 package com.foo.umbrella.ui;
 
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
@@ -59,18 +62,30 @@ public class getZipCode extends AppCompatActivity {
 
       @Override
     protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_get_zip_code);
+          super.onCreate(savedInstanceState);
+          setContentView(R.layout.activity_get_zip_code);
 
-//        super.onCreate();
-//    setContentView(R.layout.activity_main);
+          AndroidThreeTen.init(this);
+          TextView tv = (TextView) findViewById(R.id.tvBanner);
 
-//        super.onCreate();
-        AndroidThreeTen.init(this);
+          // AppLink
+          // ATTENTION: This was auto-generated to handle app links.
+          Intent appLinkIntent = getIntent();
+          String appLinkAction = appLinkIntent.getAction();
+          Uri appLinkData = appLinkIntent.getData();
+          // if there is an appLink intent, then use it to pre-fill zip code
+          try {
+              Log.d("appLink", appLinkData.getQuery() + "");
 
-        TextView tv = (TextView) findViewById(R.id.tvBanner);
-//        tv.setFocusable(false);
-    }
+              if (appLinkData.toString().length() > 0) {
+                  EditText et = (EditText) findViewById(R.id.etZip);
+                  et.setText(appLinkData.toString()); //TODO: extract zip code from AppLink intent data
+              }
+          } catch(Exception e) {
+              if(e.getMessage().length()>0) Log.d("AppLink Error",e.getMessage());
+          }
+
+      }
 
     public void getWeather(View view) {
 
@@ -171,20 +186,19 @@ public class getZipCode extends AppCompatActivity {
                             Log.d("JSON gathering", "process started! array length: "+hourly.length());
                             int r;
                             JSONObject hourlyObj;
-                            hourlyArr = new String[hourly.length()][5];
+                            hourlyArr = new String[hourly.length()][6];
 
                             Log.d("JSON gathering", "hourlyObj created");
                             // loop through hourly JSON data and gather it
 
                             for(r=0;r<hourly.length();r++) {
-                                hourlyObj = new JSONObject(hourly.getString(r));
-//                                Log.d("JSON gathering", "hourlyObj initialized");
-//                                Log.d("JSON arry test", hourly.getString(0).substring(0, 600));
-                                hourlyArr[r][0] = hourlyObj.getString("condition");
-                                hourlyArr[r][1] = hourlyObj.getString("feelslike");
-                                hourlyArr[r][2] = hourlyObj.getString("humidity");
-                                hourlyArr[r][3] = hourlyObj.getString("wspd"); // sub-object
-                                hourlyArr[r][4] = hourlyObj.getString("snow") ; //
+                                hourlyObj = new JSONObject(hourly.getString(r));    // grab next JSON object in set
+                                hourlyArr[r][0] = hourlyObj.getJSONObject("FCTTIME").getString("civil");
+                                hourlyArr[r][1] = hourlyObj.getString("condition");
+                                hourlyArr[r][2] = hourlyObj.getJSONObject("feelslike").getString("english");
+                                hourlyArr[r][3] = hourlyObj.getString("humidity");
+                                hourlyArr[r][4] = hourlyObj.getJSONObject("wspd").getString("english");
+                                hourlyArr[r][5] = hourlyObj.getJSONObject("snow").getString("english") ;
                             }
 
                             Log.d("hourly data sample",hourlyArr[0][0] +" "+ hourlyArr[0][1]);
@@ -200,41 +214,73 @@ public class getZipCode extends AppCompatActivity {
                             // main thread communication
 
                             strData = data.toString();
-                            tv.setText(R.string.forecast_for +":"); // forecast for:
+                            tv.setText(R.string.forecast_for); // forecast for:
                             tvCity.setText(city+ ", " + state);
 
                             btn.setEnabled(true);
                             btn.setText(R.string.button_label2);
 
                                 // bonus: filter out insignificant data for better UX (ie: winds <2mph, humidity 0%)
-                                String currentWeather = "Current weather:   "+ weather +" "+ String.valueOf(temp_f);
-                                if(!humidity.equals("0%")) currentWeather = currentWeather +"\n\t"+ humidity +" humid.\t";
+                                String currentWeather = "Currently:  "+ weather +" "+ String.valueOf(temp_f) +"°\n";
+                                if(!humidity.equals("0%")) currentWeather = currentWeather +"\t"+ humidity +" humid.\t";
                                 if(wind > 2) currentWeather = currentWeather +" "+ wind +" mph winds\t";
                                 if(Double.parseDouble(precipitation) >= 1.0 ) currentWeather = currentWeather +" "+ precipitation +" precip.";
 
                                 // display data - populating listView
 
+                                // display current weather
                                 TextView tvCurrent = (TextView) findViewById(R.id.tvCurrentConditions);
                                 tvCurrent.setText(currentWeather);
-
-                                // Color-code current weather by temperature
+                                // color-code background color based on temperature
                                 if(temp_f>=60) tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.weather_warm));
                                     else tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.weather_cool));
 
-
+                                // prepare listView
                                 String[] arr = new String[hourlyArr.length];
                                 int r=0;
+                                int high=0;
+                                int low=999;
                                 Log.d("arr[] rMax|length: ",String.valueOf(rMax) +"|"+ String.valueOf(hourlyArr.length));
                                 while (r<hourlyArr.length) {
-                                    arr[r] = hourlyArr[r][0] + " " + hourlyArr[r][1] + " " + hourlyArr[r][2];
+                                    arr[r] = hourlyArr[r][0] + " " + hourlyArr[r][1] + " " + hourlyArr[r][2]
+                                            + "° " + hourlyArr[r][3]+ " " + hourlyArr[r][4]+ " " + hourlyArr[r][5];
+
+                                    // get the high and low temperatures
+                                    if(Integer.valueOf(hourlyArr[r][2]) > high) high = Integer.valueOf(hourlyArr[r][2]);
+                                    if(Integer.valueOf(hourlyArr[r][2]) < low) low = Integer.valueOf(hourlyArr[r][2]);
                                     Log.d("r",String.valueOf(r));
                                     r++;
                                 }
                                 Log.d("status","arr[] filled. about to update listAdapter");
 
-                                listAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_1, arr); Log.d("listAdapter", arr[1]);
-                            Log.d("status","listAdapter cread");
+                                listAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_1, arr);
+
+                            Log.d("status","listAdapter created");
                             lv.setAdapter(listAdapter); Log.d("lv", "adapter set");
+
+                            // color-code the highest and lowest temperatures list items
+                            r =0;
+                            View row;
+                            while(r<hourlyArr.length){
+//                                Log.d("listView data sample",r +". "+ lv.getItemAtPosition(r).toString() +" | "+ lv.getAdapter().getView(0,null, lv).toString());
+
+//                                LayoutInflater inflater = ((Activity) getBaseContext()).getLayoutInflater();
+//                                View row = inflater.inflate(this,lv,false);
+                                Log.d("high/low",high +" "+ low);
+
+                                row = lv.getAdapter().getView(r,null,lv);
+                                    Log.d("rowTest",row.toString()+"");
+                                if(Integer.valueOf(hourlyArr[r][2]) == high) {
+                                    row.setBackgroundColor(Color.RED);
+                                    Log.d("High row found", high +" at #"+ r);
+                                }
+
+
+                                        //setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.weather_warm));
+                                //if(temp_f>=60) tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.weather_warm));
+
+                                r++;
+                            }
 
                         }
                     });
