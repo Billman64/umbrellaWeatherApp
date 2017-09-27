@@ -79,7 +79,7 @@ public class getZipCode extends AppCompatActivity {
 
               if (appLinkData.toString().length() > 0) {
                   EditText et = (EditText) findViewById(R.id.etZip);
-                  et.setText(appLinkData.toString()); //TODO: extract zip code from AppLink intent data
+                  et.setText(appLinkData.getPathSegments().get(0).substring(0,4)); //TODO: extract zip code from AppLink intent data
               }
           } catch(Exception e) {
               if(e.getMessage().length()>0) Log.d("AppLink Error",e.getMessage());
@@ -242,8 +242,14 @@ public class getZipCode extends AppCompatActivity {
                                 int low=999;
                                 Log.d("arr[] rMax|length: ",String.valueOf(rMax) +"|"+ String.valueOf(hourlyArr.length));
                                 while (r<hourlyArr.length) {
-                                    arr[r] = hourlyArr[r][0] + " " + hourlyArr[r][1] + " " + hourlyArr[r][2]
-                                            + "° " + hourlyArr[r][3]+ " " + hourlyArr[r][4]+ " " + hourlyArr[r][5];
+                                    arr[r] = hourlyArr[r][0] + " " + hourlyArr[r][1] + " " + hourlyArr[r][2] + "°\n\t";
+
+                                    // filter out 0% humidity
+                                    if(Double.valueOf(hourlyArr[r][3])>0.0) arr[r] = arr[r] +" "+ hourlyArr[r][3] +"% humid";
+                                    // filter out 0mph wind
+                                    if(Double.valueOf(hourlyArr[r][4])>0) arr[r] = arr[r] +" "+ hourlyArr[r][4] +" mph wind";
+                                    // filter out 0 inches of snow
+                                    if(Double.valueOf(hourlyArr[r][5]) > 0.0) arr[r] = arr[r] + " " + hourlyArr[r][5] +" in. snow";
 
                                     // get the high and low temperatures
                                     if(Integer.valueOf(hourlyArr[r][2]) > high) high = Integer.valueOf(hourlyArr[r][2]);
