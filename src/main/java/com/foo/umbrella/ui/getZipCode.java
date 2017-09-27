@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -67,6 +68,7 @@ public class getZipCode extends AppCompatActivity {
 
           AndroidThreeTen.init(this);
           TextView tv = (TextView) findViewById(R.id.tvBanner);
+          ImageView ivC = (ImageView) findViewById(R.id.ivCurrent);
 
           // AppLink
           // ATTENTION: This was auto-generated to handle app links.
@@ -84,6 +86,7 @@ public class getZipCode extends AppCompatActivity {
           } catch(Exception e) {
               if(e.getMessage().length()>0) Log.d("AppLink Error",e.getMessage());
           }
+
 
       }
 
@@ -219,6 +222,57 @@ public class getZipCode extends AppCompatActivity {
 
                             btn.setEnabled(true);
                             btn.setText(R.string.button_label2);
+
+                            // set image icon for current conditions at the top
+                            //TODO: refactor this into a function, setWeatherIcon_Current(String weatherCondition)
+                            ImageView ivC = (ImageView) findViewById(R.id.ivCurrent);
+                            switch(weather){
+                                case "Clear":
+                                    ivC.setImageResource(R.drawable.weather_sunny);
+                                    ivC.setColorFilter(Color.YELLOW);
+                                    break;
+                                case "Partly Cloudy":
+                                    ivC.setImageResource(R.drawable.weather_partlycloudy);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                                case "Cloudy":
+                                    ivC.setImageResource(R.drawable.weather_cloudy);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                                case "Lightning":
+                                    ivC.setImageResource(R.drawable.weather_lightning);
+                                    break;
+                                case "Fog":
+                                    ivC.setImageResource(R.drawable.weather_fog);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                                case "Hail":
+                                    ivC.setImageResource(R.drawable.weather_hail);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                                case "Lightning Rainy":
+                                    ivC.setImageResource(R.drawable.weather_lightning_rainy);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                                case "Rainy":
+                                    ivC.setImageResource(R.drawable.weather_rainy);
+                                    ivC.setColorFilter(Color.BLUE);
+                                    break;
+                                case "Snowy":
+                                    ivC.setImageResource(R.drawable.weather_snowy);
+                                    ivC.setColorFilter(Color.LTGRAY);
+                                    break;
+                                case "Snowy Rainy":
+                                    ivC.setImageResource(R.drawable.weather_snowy_rainy);
+                                    ivC.setColorFilter(Color.LTGRAY);
+                                    break;
+                                case "Windy Variant":
+                                    ivC.setImageResource(R.drawable.weather_windy_variant);
+                                    ivC.setColorFilter(Color.GRAY);
+                                    break;
+                            }
+
+
 
                                 // bonus: filter out insignificant data for better UX (ie: winds <2mph, humidity 0%)
                                 String currentWeather = "Currently:  "+ weather +" "+ String.valueOf(temp_f) +"°\n";
