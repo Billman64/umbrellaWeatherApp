@@ -117,7 +117,7 @@ public class getZipCode extends AppCompatActivity {
 
         //TODO: Conserve bandwidth, in accordance to Weather Underground's Stratus policy (<10 data pulls per min.), via a delay (9th button press has a delay)
         buttonPresses++; Log.d("buttonPresses",String.valueOf(buttonPresses));
-        if(buttonPresses % 2 == 0) {
+        if(buttonPresses % 9 == 0) {
             btn.setEnabled(false);  //disable button to prevent abuse of bandwidth
 
             Thread buttonDelay = new Thread(new Runnable() {
