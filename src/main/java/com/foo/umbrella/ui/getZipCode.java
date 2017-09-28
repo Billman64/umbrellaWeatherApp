@@ -115,6 +115,7 @@ public class getZipCode extends AppCompatActivity {
         ImageView ivC = (ImageView) findViewById(R.id.ivCurrent);
         if(ivC.getDrawable() ==  ContextCompat.getDrawable(this,R.mipmap.ic_launcher)) {
             ivC.setImageResource(0);
+            ivC.setContentDescription("");
         }
 
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
@@ -298,6 +299,7 @@ public class getZipCode extends AppCompatActivity {
                                     ivC.setColorFilter(Color.GRAY);
                                     break;
                             }
+                            ivC.setContentDescription(weather); // update content description for accessibility
 
                             // hide banner for until next button press
                             tv.setAlpha(0);
