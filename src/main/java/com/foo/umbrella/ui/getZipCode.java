@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.foo.umbrella.R;
 import com.jakewharton.threetenabp.AndroidThreeTen;
@@ -61,6 +62,7 @@ public class getZipCode extends AppCompatActivity {
 
     public String hourlyArr[][] = {{"a","b"}, {"a2","b2"} };
     public int rMax=0;
+    public int buttonPresses=0;
 
     String strResult = "";
 
@@ -103,12 +105,56 @@ public class getZipCode extends AppCompatActivity {
         final TextView tvCity = (TextView) findViewById(R.id.tvCity);
         EditText et = (EditText) findViewById(R.id.etZip);
         ListView lv = (ListView) findViewById(R.id.lvOutput);
+        Button btn = (Button) findViewById(R.id.button);
         tv.setAlpha(1); // make sure tvBanner visible (2nd+ button presses)
         tv.setText(et.getText());
+
+        if(!btn.isEnabled()) return;  // Don't run if not enabled.
 
         // hide soft keyboard
         InputMethodManager imm = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(et.getWindowToken() ,0);
+
+        //TODO: Conserve bandwidth, in accordance to Weather Underground's Stratus policy (<10 data pulls per min.), via a delay (9th button press has a delay)
+        buttonPresses++; Log.d("buttonPresses",String.valueOf(buttonPresses));
+        if(buttonPresses % 2 == 0) {
+            btn.setEnabled(false);  //disable button to prevent abuse of bandwidth
+
+            Thread buttonDelay = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try{
+                        Log.d("ButtonPress","delay for 9th press activated for bandwidth limitations");
+                        Thread.sleep(2000);
+                        Log.d("ButtonPress","slept 2 sec.'s");
+
+                        Handler h = new Handler(getApplicationContext().getMainLooper());
+                        h.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(getZipCode.this,"API bandwidth restriction delay",Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                        Thread.sleep(58000);
+                        h.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                btn.setEnabled(true);   //re-enable button, after delay
+                                buttonPresses = 0;  // reset to "first" press, preventing out of bound integer
+                                tv.setText("Delay finished");
+                                getWeather(view);   // re-run
+
+                                Log.d("buttonDelay","button re-enabled");
+                            }
+                        });
+
+                    } catch (Exception e) {Log.d("buttonDelay",e.toString());}
+                }
+            });
+            buttonDelay.start();
+            if(!btn.isEnabled()) return;    // Prevent API call code from running, let the thread handle the rest.
+        }
 
 
         // remove default launcher icon from current weather section
@@ -125,7 +171,6 @@ public class getZipCode extends AppCompatActivity {
         String zip = et.getText().toString();
         final String strUrl = "http://api.wunderground.com/api/" + getString(R.string.api_key) + "/conditions/hourly/q/" + zip + ".json";
         tv.setText(strUrl);
-        Button btn = (Button) findViewById(R.id.button);
         btn.setText(R.string.button_label);
 
 
@@ -249,7 +294,7 @@ public class getZipCode extends AppCompatActivity {
                                 case "Clear":
                                 case "Sunny":
                                     ivC.setImageResource(R.drawable.weather_sunny);
-                                    ivC.setColorFilter(Color.YELLOW);
+                                    ivC.setColorFilter(Color.rgb(200,200,0)); // Color.YELLOW is too bright over off-white
                                     getWindow().getDecorView().setBackgroundColor(Color.rgb(255,253,250));  // subtle background color
                                     break;
                                 case "Partly Cloudy":
@@ -303,12 +348,10 @@ public class getZipCode extends AppCompatActivity {
 
                             // hide banner for until next button press
                             tv.setAlpha(0);
-                            tvCity.setTop(10);
-                            tvCity.setLeft(200);
-
+//                            tv.setVisibility(View.GONE);
+//                            tvCity.setTop(10);  //TODO: move top elements up to make more room -> +UX
+//                            tvCity.setLeft(200);
                             //ViewPropertyAnimator.animate(view).translationYBy(-yourY).translationXBy(-yourX).setDuration(0);
-
-
 
                                 // bonus: filter out insignificant data for better UX (ie: winds <2mph, humidity 0%)
                                 String currentWeather = "Now:  "+ weather +" "+ String.valueOf(temp_f) +"°\n";
