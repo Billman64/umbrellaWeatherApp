@@ -1,14 +1,18 @@
 package com.foo.umbrella.ui;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -87,6 +91,7 @@ public class getZipCode extends AppCompatActivity {
               if(e.getMessage().length()>0) Log.d("AppLink Error",e.getMessage());
           }
 
+          // ? Use GPS get a default zip code (using WU's geolookup API, converting lat.+long. to zip)
 
       }
 
@@ -98,8 +103,19 @@ public class getZipCode extends AppCompatActivity {
         final TextView tvCity = (TextView) findViewById(R.id.tvCity);
         EditText et = (EditText) findViewById(R.id.etZip);
         ListView lv = (ListView) findViewById(R.id.lvOutput);
+        tv.setAlpha(1); // make sure tvBanner visible (2nd+ button presses)
         tv.setText(et.getText());
 
+        // hide soft keyboard
+        InputMethodManager imm = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(et.getWindowToken() ,0);
+
+
+        // remove default launcher icon from current weather section
+        ImageView ivC = (ImageView) findViewById(R.id.ivCurrent);
+        if(ivC.getDrawable() ==  ContextCompat.getDrawable(this,R.mipmap.ic_launcher)) {
+            ivC.setImageResource(0);
+        }
 
         final Handler handler = new Handler(getApplicationContext().getMainLooper());
 
@@ -226,16 +242,23 @@ public class getZipCode extends AppCompatActivity {
                             // set image icon for current conditions at the top
                             //TODO: refactor this into a function, setWeatherIcon_Current(String weatherCondition)
                             ImageView ivC = (ImageView) findViewById(R.id.ivCurrent);
+
+                            getWindow().getDecorView().setBackgroundColor(Color.rgb(250,250,250));  // subtle background color - default for most conditions
                             switch(weather){
                                 case "Clear":
+                                case "Sunny":
                                     ivC.setImageResource(R.drawable.weather_sunny);
                                     ivC.setColorFilter(Color.YELLOW);
+                                    getWindow().getDecorView().setBackgroundColor(Color.rgb(255,253,250));  // subtle background color
                                     break;
                                 case "Partly Cloudy":
+                                case "Overcast":
                                     ivC.setImageResource(R.drawable.weather_partlycloudy);
                                     ivC.setColorFilter(Color.GRAY);
+                                    getWindow().getDecorView().setBackgroundColor(Color.rgb(253,253,250));
                                     break;
                                 case "Cloudy":
+                                case "Mostly Cloudy":
                                     ivC.setImageResource(R.drawable.weather_cloudy);
                                     ivC.setColorFilter(Color.GRAY);
                                     break;
@@ -253,18 +276,22 @@ public class getZipCode extends AppCompatActivity {
                                 case "Lightning Rainy":
                                     ivC.setImageResource(R.drawable.weather_lightning_rainy);
                                     ivC.setColorFilter(Color.GRAY);
+                                    getWindow().getDecorView().setBackgroundColor(Color.rgb(240,240,245));
                                     break;
                                 case "Rainy":
+                                case "Chance of Rain":
                                     ivC.setImageResource(R.drawable.weather_rainy);
                                     ivC.setColorFilter(Color.BLUE);
                                     break;
                                 case "Snowy":
                                     ivC.setImageResource(R.drawable.weather_snowy);
                                     ivC.setColorFilter(Color.LTGRAY);
+                                    getWindow().getDecorView().setBackgroundColor(Color.rgb(254,254,254));
                                     break;
                                 case "Snowy Rainy":
                                     ivC.setImageResource(R.drawable.weather_snowy_rainy);
                                     ivC.setColorFilter(Color.LTGRAY);
+                                    getWindow().getDecorView().setBackgroundColor(Color.rgb(250,250,254));
                                     break;
                                 case "Windy Variant":
                                     ivC.setImageResource(R.drawable.weather_windy_variant);
@@ -272,22 +299,37 @@ public class getZipCode extends AppCompatActivity {
                                     break;
                             }
 
+                            // hide banner for until next button press
+                            tv.setAlpha(0);
+                            tvCity.setTop(10);
+                            tvCity.setLeft(200);
+
+                            //ViewPropertyAnimator.animate(view).translationYBy(-yourY).translationXBy(-yourX).setDuration(0);
+
 
 
                                 // bonus: filter out insignificant data for better UX (ie: winds <2mph, humidity 0%)
-                                String currentWeather = "Currently:  "+ weather +" "+ String.valueOf(temp_f) +"°\n";
-                                if(!humidity.equals("0%")) currentWeather = currentWeather +"\t"+ humidity +" humid.\t";
-                                if(wind > 2) currentWeather = currentWeather +" "+ wind +" mph winds\t";
-                                if(Double.parseDouble(precipitation) >= 1.0 ) currentWeather = currentWeather +" "+ precipitation +" precip.";
+                                String currentWeather = "Now:  "+ weather +" "+ String.valueOf(temp_f) +"°\n";
+                                String currentWeatherDetail = "";
+                                if(!humidity.equals("0%")) currentWeatherDetail = currentWeatherDetail +"\t"+ humidity +" humid.\t";
+                                if(wind > 2) currentWeatherDetail = currentWeatherDetail +" "+ wind +" mph winds\t";
+                                if(Double.parseDouble(precipitation) >= 1.0 ) currentWeatherDetail = currentWeatherDetail +" "+ precipitation +" precip.";
 
                                 // display data - populating listView
 
                                 // display current weather
                                 TextView tvCurrent = (TextView) findViewById(R.id.tvCurrentConditions);
                                 tvCurrent.setText(currentWeather);
+                                TextView tvCurrentDetail = (TextView) findViewById(R.id.tvCurrentDetails);
+                                tvCurrentDetail.setText(currentWeatherDetail);
+                            Log.d("CurrentWeatherDetail",tvCurrentDetail.getText() +"");
+
                                 // color-code background color based on temperature
                                 if(temp_f>=60) tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.weather_warm));
                                     else tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.weather_cool));
+//                                tvCurrentDetail.setBackgroundDrawable(tvCurrent.getBackground()); //deprecated
+                                tvCurrentDetail.setBackground(tvCurrent.getBackground());
+
 
                                 // prepare listView
                                 String[] arr = new String[hourlyArr.length];
@@ -314,33 +356,47 @@ public class getZipCode extends AppCompatActivity {
                                 Log.d("status","arr[] filled. about to update listAdapter");
 
                                 listAdapter = new ArrayAdapter<>(getBaseContext(), android.R.layout.simple_list_item_1, arr);
-
+                                Log.d("listAdapater getCount()",listAdapter.getCount() +"");
                             Log.d("status","listAdapter created");
                             lv.setAdapter(listAdapter); Log.d("lv", "adapter set");
+                            Log.d("lv child count", lv.getCount() +"");
+                            Log.d("listAdapter child count", lv.getCount() +"");
 
-                            // color-code the highest and lowest temperatures list items
+                            // TODO:color-code the highest and lowest temperatures list items
                             r =0;
-                            View row;
-                            while(r<hourlyArr.length){
+                            TextView tvRow = new TextView(getBaseContext());
+//                            tvRow.setText("aaa");
+                            ViewGroup.LayoutParams params = new ActionBar.LayoutParams(500,100);
+//                            lv.addView()
+                            lv.setAdapter(listAdapter);
+                            while(r<listAdapter.getCount()){
 //                                Log.d("listView data sample",r +". "+ lv.getItemAtPosition(r).toString() +" | "+ lv.getAdapter().getView(0,null, lv).toString());
 
 //                                LayoutInflater inflater = ((Activity) getBaseContext()).getLayoutInflater();
 //                                View row = inflater.inflate(this,lv,false);
-                                Log.d("high/low",high +" "+ low);
+//                                Log.d("high/low",high +" "+ low);
+//                                Log.d("listAdapter" + r, listAdapter.get );
 
-                                row = lv.getAdapter().getView(r,null,lv);
-                                    Log.d("rowTest",row.toString()+"");
+//                                row = lv.getAdapter().getView(r,null,lv);
+//                                Log.d("rowTest",row.toString()+"");
+
                                 if(Integer.valueOf(hourlyArr[r][2]) == high) {
-                                    row.setBackgroundColor(Color.RED);
+//                                    row.setBackgroundColor(Color.RED);
+//                                    listAdapter.getView(r,view,lv).setBackgroundColor(Color.RED);  // affects button instead. might need a custon layout
+                                    //TODO: access individual listView item to color it. May need a custom adapter.
+                                    Log.d("listAdapt getItmVT",listAdapter.getItemViewType(r) +"");
+                                    lv.setBackgroundColor(Color.argb(10,200,200,200));
+
                                     Log.d("High row found", high +" at #"+ r);
                                 }
-
-
                                         //setBackgroundColor(ContextCompat.getColor(getBaseContext(), R.color.weather_warm));
                                 //if(temp_f>=60) tvCurrent.setBackgroundColor(ContextCompat.getColor(getBaseContext(),R.color.weather_warm));
 
                                 r++;
                             }
+                            Log.d("r",r +"");
+
+//                            lv.setAdapter(listAdapter);
 
                         }
                     });
